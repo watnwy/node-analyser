@@ -1,10 +1,17 @@
-import express, { Request } from "express";
+import express from "express";
 import path from "path";
+import process from "process";
 import { readdir, readFile, stat, pathExists } from "fs-extra";
-import type { ErrorRequestHandler } from "express";
-import { PerformAnalysisRequest, AnalysisEcoSystemResult } from "./models";
 import { parse as parseYarnLockFile } from "@yarnpkg/lockfile";
 import "express-async-errors";
+
+import type { Request, ErrorRequestHandler } from "express";
+import type { PerformAnalysisRequest, AnalysisEcoSystemResult } from "./models";
+
+process.on("SIGINT", () => {
+  console.info("Interrupted");
+  process.exit(0);
+});
 
 var app = express();
 
