@@ -101,8 +101,7 @@ app.post(
 );
 
 app.use(((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).send({ err: err.message });
+  res.status(500).send({ detail: err.message, traceback: err.stack });
 }) as ErrorRequestHandler);
 
 app.listen(3000);
