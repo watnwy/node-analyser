@@ -11,7 +11,11 @@ var app = express();
 app.use(express.json());
 
 app.get("/_/health", async (req, res) => {
-  res.send("healthy");
+  res.send({ status: "healthy" });
+});
+
+app.get("/_/ready", async (req, res) => {
+  res.send({ status: "ready" });
 });
 
 const IGNORE_FOLDERS = ["node_modules"];
