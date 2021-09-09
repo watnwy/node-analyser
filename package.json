@@ -1,0 +1,17 @@
+{
+  "name": "node-analyser",
+  "version": "0.0.1",
+  "description": "The Watnwy Node analyser service",
+  "main": "app.js",
+  "scripts": {
+    "build": "rimraf ./build && tsc",
+    "start-dev": "nodemon",
+    "start": "node dist/app.js"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.12",
+    "rimraf": "^3.0.2",
+    "ts-node": "^10.2.1",
+    "typescript": "^4.4.2"
+  }
+}
