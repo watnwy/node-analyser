@@ -2,6 +2,7 @@ import express from "express";
 import path from "path";
 import process from "process";
 import { readFile, pathExists } from "fs-extra";
+import { clean } from "semver";
 
 import { findFiles } from "@analyser/files";
 import { yarnLockedVersions } from "@analyser/packages";
@@ -39,21 +40,41 @@ app.post(
       ).map(async (packageFile) => {
         const packageContent = JSON.parse(await readFile(packageFile, "utf-8"));
         return await Promise.all(
-          Object.entries(packageContent.dependencies).map(
-            async ([pack, versionPattern]) => {
-              const dirname = path.dirname(packageFile);
-              const yarnLockFile = `${dirname}/yarn.lock`;
-              if (await pathExists(yarnLockFile)) {
-                const lockedVersions = await yarnLockedVersions(yarnLockFile);
-                return [
-                  pack,
-                  lockedVersions[`${pack}@${versionPattern}`] ?? null,
-                ];
+          Object.entries(packageContent.dependencies)
+            .filter(
+              ([, versionPattern]) =>
+                !(versionPattern as string).startsWith("link:")
+            )
+            .map(async ([pack, versionPattern]) => {
+              const fixedVersion = versionPattern
+                ? clean(versionPattern as string)
+                : undefined;
+              if (fixedVersion) {
+                return [pack, fixedVersion];
+              } else {
+                const dirname = path.dirname(packageFile);
+
+                const yarnLockFile = `${dirname}/yarn.lock`;
+                if (await pathExists(yarnLockFile)) {
+                  const lockedVersions = await yarnLockedVersions(yarnLockFile);
+                  return [
+                    pack,
+                    lockedVersions[`${pack}@${versionPattern}`] ?? null,
+                  ];
+                }
+
+                const packageLockFile = `${dirname}/package-lock.json`;
+                if (await pathExists(packageLockFile)) {
+                  const lockedVersions = JSON.parse(await readFile(packageLockFile, 'utf-8'))
+                  return [
+                    pack,
+                    lockedVersions.dependencies[pack]?.version ?? null,
+                  ]
+                }
+
+                return [pack, null];
               }
-              // Todo: handle package-lock files
-              return [pack, null];
-            }
-          )
+            })
         );
       })
     );
