@@ -1,8 +1,10 @@
 import express from "express";
 import path from "path";
 import process from "process";
-import { readdir, readFile, stat, pathExists } from "fs-extra";
-import { parse as parseYarnLockFile } from "@yarnpkg/lockfile";
+import { readFile, pathExists } from "fs-extra";
+
+import { findFiles } from "@analyser/files";
+import { yarnLockedVersions } from "@analyser/packages";
 import "express-async-errors";
 
 import type { Request, ErrorRequestHandler } from "express";
@@ -24,47 +26,6 @@ app.get("/_/health", async (req, res) => {
 app.get("/_/ready", async (req, res) => {
   res.send({ status: "ready" });
 });
-
-const IGNORE_FOLDERS = ["node_modules"];
-
-async function findFiles(path: string, file: string): Promise<string[]> {
-  return (
-    await Promise.all(
-      (
-        await readdir(path)
-      )
-        .filter((entry) => !entry.startsWith("."))
-        .map((entry) => ({
-          path: path,
-          entry: entry,
-          full_path: `${path}/${entry}`,
-        }))
-        .map(async ({ full_path: fullPath, entry }) => {
-          if (
-            (await stat(fullPath)).isDirectory() &&
-            !IGNORE_FOLDERS.includes(entry)
-          ) {
-            return await findFiles(fullPath, file);
-          } else if (entry === file) {
-            return [fullPath];
-          } else {
-            return [];
-          }
-        })
-    )
-  ).flat();
-}
-
-async function yarnLockedVersions(yarnLockFile: string) {
-  const parsedYarnLockFile = parseYarnLockFile(
-    await readFile(yarnLockFile, "utf-8")
-  );
-  return Object.fromEntries(
-    Object.entries<{ version: string }>(parsedYarnLockFile.object).map(
-      ([pack, { version }]) => [pack, version]
-    )
-  );
-}
 
 app.post(
   "/analysis",

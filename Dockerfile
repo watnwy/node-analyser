@@ -26,5 +26,4 @@ WORKDIR /opt/node-analyser
 COPY ./package.json .
 COPY ./yarn.lock .
 COPY --from=builder-node-analyser-prod /opt/node-analyser/dist /opt/node-analyser
-RUN yarn
 ENTRYPOINT [ "node", "app.js" ]
