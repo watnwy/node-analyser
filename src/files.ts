@@ -1,6 +1,6 @@
-import { readdir, stat } from "fs-extra";
+import { readdir, stat } from 'fs-extra';
 
-const IGNORED_FOLDERS = ["node_modules"];
+const IGNORED_FOLDERS = ['node_modules'];
 
 export async function findFiles(path: string, file: string): Promise<string[]> {
   return (
@@ -8,24 +8,21 @@ export async function findFiles(path: string, file: string): Promise<string[]> {
       (
         await readdir(path)
       )
-        .filter((entry) => !entry.startsWith("."))
-        .map((entry) => ({
+        .filter(entry => !entry.startsWith('.'))
+        .map(entry => ({
           path: path,
           entry: entry,
           full_path: `${path}/${entry}`,
         }))
         .map(async ({ full_path: fullPath, entry }) => {
-          if (
-            (await stat(fullPath)).isDirectory() &&
-            !IGNORED_FOLDERS.includes(entry)
-          ) {
+          if ((await stat(fullPath)).isDirectory() && !IGNORED_FOLDERS.includes(entry)) {
             return await findFiles(fullPath, file);
           } else if (entry === file) {
             return [fullPath];
           } else {
             return [];
           }
-        })
+        }),
     )
   ).flat();
 }
