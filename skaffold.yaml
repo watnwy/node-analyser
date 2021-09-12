@@ -1,0 +1,56 @@
+apiVersion: skaffold/v2beta15
+kind: Config
+build:
+  artifacts:
+  - image: 233632450084.dkr.ecr.eu-west-1.amazonaws.com/watnwy-node-analyser
+    sync:
+      manual:
+      - src: src/**/*
+        dest: /opt/node-analyser
+    docker:
+      target: node-analyser-dev
+      buildArgs:
+        BUILDKIT_INLINE_CACHE: "1"
+      cacheFrom:
+        - 233632450084.dkr.ecr.eu-west-1.amazonaws.com/watnwy-node-analyser:latest
+  tagPolicy:
+    gitCommit:
+      prefix: dev-
+  local:
+    push: false
+    useBuildkit: true
+    concurrency: 0
+profiles:
+- name: dev
+- name: imported
+  patches:
+  - op: replace
+    path: /build/local/push
+    value: true
+- name: push
+  activation:
+  - env: PUSH=true
+  patches:
+  - op: replace
+    path: /build/local/push
+    value: true
+- name: prod
+  activation:
+  - command: run
+  - command: build
+  patches:
+  - op: replace
+    path: /build/artifacts/0/docker/target
+  - op: replace
+    path: /build/tagPolicy/gitCommit/prefix
+    value: prod-
+- name: latest
+  activation:
+  - env: LATEST=true
+  patches:
+  - op: remove
+    path: /build/tagPolicy/gitCommit
+  - op: add
+    path: /build/tagPolicy/envTemplate
+    value:
+      template: latest
