@@ -71,6 +71,10 @@ app.post('/analysis', async (req: Request<unknown, AnalysisEcoSystemResult[], Pe
         objects: packagePackages.map(([pack, version]) => ({
           name: pack!,
           versions: [version],
+          versions_providers: [{
+            type: 'NPMReleases',
+            package_name: pack
+          }]
         })),
       })),
   );
