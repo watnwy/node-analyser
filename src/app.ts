@@ -40,6 +40,7 @@ app.post('/analysis', async (req: Request<unknown, AnalysisEcoSystemResult[], Pe
           ...Object.entries(packageContent.devDependencies ?? {}),
         ]
           .filter(([, versionPattern]) => !(versionPattern as string).startsWith('link:'))
+          .filter(([pack]) => !pack.startsWith('@types/'))
           .map(async ([pack, versionPattern]) => {
             const fixedVersion = versionPattern ? clean(versionPattern as string) : undefined;
             if (fixedVersion) {
