@@ -35,7 +35,10 @@ app.post('/analysis', async (req: Request<unknown, AnalysisEcoSystemResult[], Pe
     ).map(async packageFile => {
       const packageContent = JSON.parse(await readFile(packageFile, 'utf-8'));
       return await Promise.all(
-        Object.entries(packageContent.dependencies ?? {})
+        [
+          ...Object.entries(packageContent.dependencies ?? {}),
+          ...Object.entries(packageContent.devDependencies ?? {}),
+        ]
           .filter(([, versionPattern]) => !(versionPattern as string).startsWith('link:'))
           .map(async ([pack, versionPattern]) => {
             const fixedVersion = versionPattern ? clean(versionPattern as string) : undefined;
